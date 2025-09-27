@@ -105,14 +105,48 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       if (selectedPaths.isNotEmpty) {
         final fileItems = await _fileService.getFileItems(selectedPaths);
         setState(() {
-          _selectedFiles = fileItems;
+          _selectedFiles.addAll(fileItems); // Add to existing files instead of replacing
           _errorMessage = null;
         });
+        
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Added ${fileItems.length} file(s)'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
       }
     } catch (e) {
+      final errorMessage = e.toString();
+      print('File selection error: $errorMessage');
+      
       setState(() {
-        _errorMessage = 'Failed to select files: $e';
+        // Provide more helpful error messages for common Android issues
+        if (errorMessage.contains('scoped storage') || 
+            errorMessage.contains('unknown_path') ||
+            errorMessage.contains('failed to retrieve path')) {
+          _errorMessage = 'Android Storage Restriction: $errorMessage\n\n'
+              'Try these solutions:\n'
+              '• Select files from Downloads folder\n'
+              '• Use Documents or Pictures folders\n'
+              '• Avoid "Recent files" or cloud storage\n'
+              '• Copy files to Downloads first if needed';
+        } else if (errorMessage.contains('permission')) {
+          _errorMessage = 'Permission Error: Please grant storage access in Settings > Apps > AirFiles > Permissions';
+        } else {
+          _errorMessage = 'File Selection Error: $errorMessage';
+        }
       });
+      
+      // Show detailed error dialog for scoped storage issues
+      if (mounted && (errorMessage.contains('scoped storage') || 
+          errorMessage.contains('unknown_path') ||
+          errorMessage.contains('failed to retrieve path'))) {
+        _showScopedStorageHelpDialog();
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -732,6 +766,71 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  /// Show help dialog for Android scoped storage issues
+  void _showScopedStorageHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.info_outline, color: AppColors.primaryColor),
+              SizedBox(width: 8),
+              Text('Android File Access Help'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Android 10+ restricts file access for security. Here\'s how to select files successfully:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                const Text('✅ RECOMMENDED LOCATIONS:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
+                const SizedBox(height: 8),
+                const Text('• Downloads folder - Best compatibility'),
+                const Text('• Documents folder - Good for documents'),
+                const Text('• Pictures/DCIM - Good for photos'),
+                const Text('• Movies - Good for videos'),
+                const Text('• Music - Good for audio files'),
+                const SizedBox(height: 16),
+                const Text('❌ AVOID THESE:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error)),
+                const SizedBox(height: 8),
+                const Text('• "Recent files" section'),
+                const Text('• Google Drive or cloud storage'),
+                const Text('• Third-party app folders'),
+                const Text('• System directories'),
+                const SizedBox(height: 16),
+                const Text('💡 QUICK SOLUTION:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryColor)),
+                const SizedBox(height: 8),
+                const Text('1. Open your file manager'),
+                const Text('2. Navigate to Downloads folder'),
+                const Text('3. Copy your files there if needed'),
+                const Text('4. Select files directly from Downloads'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Got it'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _selectFiles(); // Try again
+              },
+              child: const Text('Try Again'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildBottomActions() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -750,17 +849,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _selectFiles,
-                icon: const Icon(Icons.add),
-                label: Text(
-                    _selectedFiles.isEmpty ? 'Select Files' : 'Add More Files'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _selectFiles,
+                    icon: const Icon(Icons.add),
+                    label: Text(
+                        _selectedFiles.isEmpty ? 'Select Files' : 'Add More Files'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: _showScopedStorageHelpDialog,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  ),
+                  child: const Icon(Icons.help_outline, size: 20),
+                ),
+              ],
             ),
           ] else ...[
             SizedBox(
