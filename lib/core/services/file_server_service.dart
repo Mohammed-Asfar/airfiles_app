@@ -40,7 +40,12 @@ class FileServerService {
         handler,
         address,
         port,
+        shared: true, // Allow multiple connections
       );
+      
+      // Optimize for large file transfers
+      _server!.defaultResponseHeaders.set('Server', 'AirFiles/1.0');
+      _server!.defaultResponseHeaders.set('Connection', 'keep-alive');
 
       _config = ServerConfig(
         address: address,
@@ -91,7 +96,8 @@ class FileServerService {
       if (await directory.exists()) {
         return _generateDirectoryListing(decodedPath, [filePath]);
       } else if (await file.exists()) {
-        return _serveFile(file);
+        // Serve file directly without loading into app memory
+        return _serveFileDirectly(file, request);
       }
 
       return Response.notFound('File not found');
@@ -118,22 +124,94 @@ class FileServerService {
     return null;
   }
 
-  Future<Response> _serveFile(File file) async {
+  /// Serve file directly from disk without loading into app memory
+  Future<Response> _serveFileDirectly(File file, Request request) async {
     try {
+      final stat = await file.stat();
+      final fileSize = stat.size;
       final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
-      final bytes = await file.readAsBytes();
+      final fileName = path_helper.basename(file.path);
+      
+      // Check for Range header to support partial content requests
+      final rangeHeader = request.headers['range'];
+      
+      if (rangeHeader != null && rangeHeader.startsWith('bytes=')) {
+        return _servePartialFileDirect(file, mimeType, fileSize, rangeHeader, fileName);
+      }
+      
+      // Always use streaming for direct access (no memory loading)
+      final stream = file.openRead();
       
       return Response.ok(
-        bytes,
+        stream,
         headers: {
           'Content-Type': mimeType,
-          'Content-Length': bytes.length.toString(),
-          'Content-Disposition': 'inline; filename="${path_helper.basename(file.path)}"',
+          'Content-Length': fileSize.toString(),
+          'Content-Disposition': _getContentDisposition(mimeType, fileName),
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600',
+          'Last-Modified': HttpDate.format(stat.modified),
+          'ETag': '"${stat.modified.millisecondsSinceEpoch}-${stat.size}"',
         },
       );
     } catch (e) {
-      return Response.internalServerError(body: 'Error reading file: $e');
+      return Response.internalServerError(body: 'Error accessing file: $e');
     }
+  }
+
+  /// Serve partial file content directly for range requests
+  Future<Response> _servePartialFileDirect(File file, String mimeType, int fileSize, String rangeHeader, String fileName) async {
+    try {
+      // Parse range header (e.g., "bytes=0-1023" or "bytes=1024-")
+      final rangeMatch = RegExp(r'bytes=(\d+)-(\d*)').firstMatch(rangeHeader);
+      if (rangeMatch == null) {
+        return Response(416, body: 'Invalid range header');
+      }
+      
+      final start = int.parse(rangeMatch.group(1)!);
+      final endStr = rangeMatch.group(2);
+      final end = endStr?.isNotEmpty == true ? int.parse(endStr!) : fileSize - 1;
+      
+      // Validate range
+      if (start >= fileSize || end >= fileSize || start > end) {
+        return Response(416, 
+          body: 'Range not satisfiable',
+          headers: {'Content-Range': 'bytes */$fileSize'}
+        );
+      }
+      
+      final contentLength = end - start + 1;
+      final stream = file.openRead(start, end + 1);
+      
+      return Response(206, // Partial Content
+        body: stream,
+        headers: {
+          'Content-Type': mimeType,
+          'Content-Length': contentLength.toString(),
+          'Content-Range': 'bytes $start-$end/$fileSize',
+          'Accept-Ranges': 'bytes',
+          'Content-Disposition': _getContentDisposition(mimeType, fileName),
+          'Cache-Control': 'public, max-age=3600',
+        },
+      );
+    } catch (e) {
+      return Response.internalServerError(body: 'Error serving partial file: $e');
+    }
+  }
+
+  /// Get appropriate content disposition based on file type
+  String _getContentDisposition(String mimeType, String fileName) {
+    // For media files and PDFs, display inline in browser
+    if (mimeType.startsWith('image/') ||
+        mimeType.startsWith('video/') ||
+        mimeType.startsWith('audio/') ||
+        mimeType == 'application/pdf' ||
+        mimeType.startsWith('text/')) {
+      return 'inline; filename="$fileName"';
+    }
+    
+    // For other files, force download
+    return 'attachment; filename="$fileName"';
   }
 
   Response _generateDirectoryListing(String currentPath, List<String> paths) {
@@ -238,13 +316,31 @@ class FileServerService {
       final size = _formatFileSize(stat.size);
       final relativePath = currentPath == '/' ? name : '$currentPath/$name';
       final icon = _getFileIcon(name);
+      final isLargeFile = stat.size > 100 * 1024 * 1024; // >100MB
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      final isMediaFile = mimeType.startsWith('image/') || mimeType.startsWith('video/') || mimeType.startsWith('audio/');
 
-      html.writeln('<div class="file-item file">');
-      html.writeln('<a href="/$relativePath" target="_blank">');
+      html.writeln('<div class="file-item file${isLargeFile ? ' large-file' : ''}">'); 
+      
+      // Main file link - opens in browser or downloads based on file type
+      html.writeln('<div class="file-main">');
+      html.writeln('<a href="/$relativePath" ${isMediaFile ? 'target="_blank"' : ''}>');
       html.writeln('<span class="icon">$icon</span>');
       html.writeln('<span class="name">${_escapeHtml(name)}</span>');
-      html.writeln('<span class="size">$size</span>');
+      html.writeln('<span class="size">$size${isLargeFile ? ' (Direct Stream)' : ''}</span>');
       html.writeln('</a>');
+      html.writeln('</div>');
+      
+      // Action buttons for different file types
+      html.writeln('<div class="file-actions">');
+      
+      if (isMediaFile) {
+        html.writeln('<a href="/$relativePath" target="_blank" class="action-btn view-btn" title="View in Browser">👁️</a>');
+      }
+      
+      html.writeln('<a href="/$relativePath" download="$name" class="action-btn download-btn" title="Download">⬇️</a>');
+      html.writeln('</div>');
+      
       html.writeln('</div>');
     } catch (e) {
       // Skip files that can't be accessed
@@ -361,6 +457,10 @@ class FileServerService {
       .file-item {
         border-bottom: 1px solid rgba(78, 205, 196, 0.2);
         transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
       }
       
       .file-item:last-child {
@@ -372,12 +472,57 @@ class FileServerService {
         transform: translateX(3px);
       }
       
-      .file-item a {
+      .file-main {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .file-main a {
         display: flex;
         align-items: center;
         padding: 16px 20px;
         text-decoration: none;
         color: #2A3E3E;
+      }
+      
+      .file-actions {
+        display: flex;
+        gap: 8px;
+        padding-right: 16px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      
+      .file-item:hover .file-actions {
+        opacity: 1;
+      }
+      
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(39, 154, 151, 0.3);
+      }
+      
+      .action-btn:hover {
+        background: #4ECDC4;
+        transform: scale(1.1);
+        box-shadow: 0 2px 4px rgba(39, 154, 151, 0.3);
+      }
+      
+      .view-btn {
+        background: rgba(78, 205, 196, 0.2);
+      }
+      
+      .download-btn {
+        background: rgba(39, 154, 151, 0.2);
       }
       
       .icon {
@@ -400,6 +545,21 @@ class FileServerService {
         min-width: 80px;
         text-align: right;
         font-weight: 500;
+      }
+      
+      .large-file {
+        position: relative;
+      }
+      
+      .large-file::after {
+        content: "⚡";
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #279A97;
+        font-size: 0.8em;
+        opacity: 0.7;
       }
       
       .directory .name {
@@ -501,8 +661,19 @@ class FileServerService {
           background-color: rgba(78, 205, 196, 0.2);
         }
         
-        .file-item a {
+        .file-main a {
           color: #E2F4F4;
+        }
+        
+        .action-btn {
+          background: rgba(26, 46, 46, 0.8);
+          border: 1px solid rgba(78, 205, 196, 0.4);
+          color: #4ECDC4;
+        }
+        
+        .action-btn:hover {
+          background: #4ECDC4;
+          color: #1A2E2E;
         }
         
         .name {

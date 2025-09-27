@@ -504,12 +504,12 @@ class PermissionService {
     return statuses;
   }
   
-  /// Check if storage permissions are available (granted or limited)
+  /// Check if storage permissions are available (granted or limited) - Android only
   Future<bool> hasStorageAccess() async {
     try {
       final androidVersion = await _getAndroidVersion();
       
-      if (Platform.isAndroid && androidVersion >= 33) {
+      if (androidVersion >= 33) {
         // Android 13+ - check media permissions
         final photosStatus = await Permission.photos.status;
         final videosStatus = await Permission.videos.status;
@@ -521,18 +521,11 @@ class PermissionService {
                videosStatus == PermissionStatus.granted ||
                videosStatus == PermissionStatus.limited ||
                audioStatus == PermissionStatus.granted;
-      } else if (Platform.isAndroid) {
+      } else {
         // Android 12 and below - legacy storage
         final storageStatus = await Permission.storage.status;
         return storageStatus == PermissionStatus.granted;
-      } else if (Platform.isIOS) {
-        // iOS - photos permission
-        final photosStatus = await Permission.photos.status;
-        return photosStatus == PermissionStatus.granted ||
-               photosStatus == PermissionStatus.limited;
       }
-      
-      return true;
     } catch (e) {
       debugPrint('Error checking storage access: $e');
       return false;
