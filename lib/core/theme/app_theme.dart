@@ -247,13 +247,36 @@ class AppTheme {
     );
   }
   
-  // Custom gradient for backgrounds
+  // Custom gradient for backgrounds - inspired by the icon
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
       AppColors.gradientStart,
+      AppColors.gradientMid,
       AppColors.gradientEnd,
+    ],
+  );
+  
+  // Dark theme gradient
+  static const LinearGradient darkGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      AppColors.darkBackground,
+      AppColors.darkSurface,
+      AppColors.darkSurfaceVariant,
+    ],
+  );
+  
+  // Icon spiral gradient - matching the AirFiles icon
+  static const LinearGradient spiralGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      AppColors.spiralTealLight,
+      AppColors.spiralTeal,
+      AppColors.spiralTealDark,
     ],
   );
   

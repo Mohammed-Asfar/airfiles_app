@@ -23,6 +23,18 @@ class PermissionService {
   /// Check if all required permissions are granted
   Future<bool> hasAllRequiredPermissions() async {
     try {
+      // Only check critical permissions (storage) for the main permission banner
+      // Other permissions are optional and shouldn't block the app
+      return await hasStorageAccess();
+    } catch (e) {
+      debugPrint('Error checking permissions: $e');
+      return false;
+    }
+  }
+  
+  /// Check if all permissions (including optional ones) are granted
+  Future<bool> hasAllOptionalPermissions() async {
+    try {
       final requiredPermissions = await _getRequiredPermissions();
       
       for (final permission in requiredPermissions) {

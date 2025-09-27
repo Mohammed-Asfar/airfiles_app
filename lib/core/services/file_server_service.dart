@@ -151,7 +151,7 @@ class FileServerService {
     html.writeln('<body>');
     html.writeln('<div class="container">');
     html.writeln('<header>');
-    html.writeln('<h1>🌬️ AirFiles</h1>');
+    html.writeln('<h1>AirFiles</h1>');
     html.writeln('<p class="subtitle">${currentPath == '/' ? 'Shared Files' : currentPath}</p>');
     html.writeln('</header>');
     
@@ -316,7 +316,7 @@ class FileServerService {
       
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #4ECDC4 0%, #279A97 50%, #1F7A77 100%);
         min-height: 100vh;
         color: #333;
       }
@@ -330,33 +330,37 @@ class FileServerService {
       header {
         text-align: center;
         margin-bottom: 30px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(39, 154, 151, 0.2);
+        border: 1px solid rgba(78, 205, 196, 0.3);
       }
       
       h1 {
         font-size: 2.5em;
-        margin-bottom: 10px;
-        color: #4f46e5;
+        margin: 0 0 10px 0;
+        color: #279A97;
+        text-shadow: 0 2px 4px rgba(39, 154, 151, 0.1);
       }
       
       .subtitle {
-        color: #6b7280;
+        color: #1F7A77;
         font-size: 1.1em;
+        font-weight: 500;
       }
       
       .file-list {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 12px rgba(39, 154, 151, 0.15);
+        border: 1px solid rgba(78, 205, 196, 0.2);
       }
       
       .file-item {
-        border-bottom: 1px solid #e5e7eb;
-        transition: background-color 0.2s;
+        border-bottom: 1px solid rgba(78, 205, 196, 0.2);
+        transition: all 0.2s ease;
       }
       
       .file-item:last-child {
@@ -364,15 +368,16 @@ class FileServerService {
       }
       
       .file-item:hover {
-        background-color: #f3f4f6;
+        background-color: rgba(78, 205, 196, 0.1);
+        transform: translateX(3px);
       }
       
       .file-item a {
         display: flex;
         align-items: center;
-        padding: 15px 20px;
+        padding: 16px 20px;
         text-decoration: none;
-        color: #374151;
+        color: #2A3E3E;
       }
       
       .icon {
@@ -380,23 +385,30 @@ class FileServerService {
         margin-right: 15px;
         width: 30px;
         text-align: center;
+        color: #279A97;
       }
       
       .name {
         flex: 1;
         font-weight: 500;
+        color: #1A2E2E;
       }
       
       .size {
-        color: #6b7280;
+        color: #4ECDC4;
         font-size: 0.9em;
         min-width: 80px;
         text-align: right;
+        font-weight: 500;
       }
       
       .directory .name {
-        color: #4f46e5;
+        color: #279A97;
         font-weight: 600;
+      }
+      
+      .directory .icon {
+        color: #1F7A77;
       }
       
       .error {
@@ -405,13 +417,36 @@ class FileServerService {
         text-align: center;
         background-color: #fef2f2;
         border: 1px solid #fecaca;
-        border-radius: 5px;
+        border-radius: 8px;
         margin: 10px;
+      }
+      
+      /* Scrollbar styling for webkit browsers */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: rgba(78, 205, 196, 0.1);
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #4ECDC4;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #279A97;
       }
       
       @media (max-width: 600px) {
         .container {
           padding: 10px;
+        }
+        
+        header {
+          padding: 20px;
         }
         
         h1 {
@@ -430,6 +465,64 @@ class FileServerService {
         .size {
           min-width: 60px;
           font-size: 0.8em;
+        }
+      }
+      
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: linear-gradient(135deg, #0A1A1A 0%, #1A2E2E 50%, #2A3E3E 100%);
+        }
+        
+        header {
+          background: rgba(26, 46, 46, 0.95);
+          color: #F1F9F9;
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+          color: #4ECDC4;
+        }
+        
+        .subtitle {
+          color: #94C7C7;
+        }
+        
+        .file-list {
+          background: rgba(26, 46, 46, 0.96);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .file-item {
+          border-bottom: 1px solid rgba(78, 205, 196, 0.3);
+        }
+        
+        .file-item:hover {
+          background-color: rgba(78, 205, 196, 0.2);
+        }
+        
+        .file-item a {
+          color: #E2F4F4;
+        }
+        
+        .name {
+          color: #F1F9F9;
+        }
+        
+        .directory .name {
+          color: #4ECDC4;
+        }
+        
+        .icon {
+          color: #4ECDC4;
+        }
+        
+        .directory .icon {
+          color: #26A69A;
+        }
+        
+        .size {
+          color: #94C7C7;
         }
       }
     ''';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/permission_service.dart';
 import '../theme/app_colors.dart';
+import 'airfiles_logo.dart';
 
 class PermissionCheckWidget extends StatefulWidget {
   final Widget child;
@@ -249,14 +250,13 @@ class _PermissionCheckWidgetState extends State<PermissionCheckWidget> {
     return Column(
       children: [
         const SizedBox(height: 32),
-        const Icon(
-          Icons.security,
+        AirFilesLogo(
           size: 80,
-          color: Colors.white,
+          showBackground: true,
         ),
         const SizedBox(height: 24),
         Text(
-          '🌬️ AirFiles Permissions',
+          'AirFiles Permissions',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,

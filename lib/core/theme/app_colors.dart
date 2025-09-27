@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary brand colors - inspired by air/wind theme
-  static const Color primaryColor = Color(0xFF4F46E5); // Indigo
-  static const Color primaryVariant = Color(0xFF3730A3); // Darker indigo
-  static const Color secondary = Color(0xFF06B6D4); // Cyan - represents airflow
-  static const Color secondaryVariant = Color(0xFF0891B2); // Darker cyan
+  // Primary brand colors - inspired by the AirFiles icon spiral design
+  static const Color primaryColor = Color(0xFF279A97); // Main teal from icon
+  static const Color primaryVariant = Color(0xFF1F7A77); // Darker teal
+  static const Color secondary = Color(0xFF4ECDC4); // Lighter teal/cyan
+  static const Color secondaryVariant = Color(0xFF26A69A); // Medium teal
   
-  // Background gradients
-  static const Color gradientStart = Color(0xFF667EEA); // Light purple
-  static const Color gradientEnd = Color(0xFF764BA2); // Darker purple
+  // Icon spiral colors - matching the beautiful gradient
+  static const Color spiralTeal = Color(0xFF279A97); // Main spiral color
+  static const Color spiralTealLight = Color(0xFF4ECDC4); // Light spiral
+  static const Color spiralTealDark = Color(0xFF1F7A77); // Dark spiral
+  
+  // Background gradients - inspired by air/wind theme with teal accent
+  static const Color gradientStart = Color(0xFF4ECDC4); // Light teal
+  static const Color gradientMid = Color(0xFF279A97); // Main teal
+  static const Color gradientEnd = Color(0xFF1F7A77); // Dark teal
   
   // UI Colors
   static const Color background = Color(0xFFF8FAFC);
@@ -34,18 +40,22 @@ class AppColors {
   static const Color serverStopped = Color(0xFF6B7280);
   static const Color serverError = error;
   
-  // Dark theme colors
-  static const Color darkBackground = Color(0xFF0F172A);
-  static const Color darkSurface = Color(0xFF1E293B);
-  static const Color darkSurfaceVariant = Color(0xFF334155);
-  static const Color darkOnBackground = Color(0xFFF1F5F9);
-  static const Color darkOnSurface = Color(0xFFE2E8F0);
-  static const Color darkOnSurfaceVariant = Color(0xFF94A3B8);
+  // Dark theme colors - enhanced for teal theme
+  static const Color darkBackground = Color(0xFF0A1A1A); // Very dark with teal undertone
+  static const Color darkSurface = Color(0xFF1A2E2E); // Dark teal surface
+  static const Color darkSurfaceVariant = Color(0xFF2A3E3E); // Medium dark teal
+  static const Color darkOnBackground = Color(0xFFF1F9F9); // Light text with teal tint
+  static const Color darkOnSurface = Color(0xFFE2F4F4); // Light teal text
+  static const Color darkOnSurfaceVariant = Color(0xFF94C7C7); // Medium teal text
   
-  // File type colors
+  // Dark theme accent colors
+  static const Color darkAccent = Color(0xFF4ECDC4); // Bright teal for accents
+  static const Color darkAccentVariant = Color(0xFF26A69A); // Medium accent
+  
+  // File type colors - enhanced with teal theme
   static const Color fileImage = Color(0xFFEC4899);
   static const Color fileVideo = Color(0xFF8B5CF6);
-  static const Color fileAudio = Color(0xFF06B6D4);
+  static const Color fileAudio = Color(0xFF4ECDC4); // Teal for audio
   static const Color fileDocument = Color(0xFFF59E0B);
   static const Color fileArchive = Color(0xFF84CC16);
   static const Color fileGeneric = Color(0xFF6B7280);

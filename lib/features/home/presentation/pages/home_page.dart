@@ -10,6 +10,7 @@ import '../../../../core/models/server_config.dart';
 import '../../../../core/models/file_item.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/airfiles_logo.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,37 +24,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final NetworkService _networkService = NetworkService();
   final FileService _fileService = FileService();
   final PermissionService _permissionService = PermissionService();
-  
+
   ServerState _serverState = const ServerState(status: ServerStatus.stopped);
   List<FileItem> _selectedFiles = [];
   String? _localIP;
   String? _wifiName;
   bool _isLoading = false;
   String? _errorMessage;
-  
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  
+
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
     _loadNetworkInfo();
   }
-  
+
   @override
   void dispose() {
     _pulseController.dispose();
     _serverService.stopServer();
     super.dispose();
   }
-  
+
   void _initializeAnimations() {
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
+
     _pulseAnimation = Tween<double>(
       begin: 1.0,
       end: 1.1,
@@ -62,10 +63,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     ));
   }
-  
+
   Future<void> _loadNetworkInfo() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final networkInfo = await _networkService.getNetworkInfo();
       setState(() {
@@ -81,24 +82,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       setState(() => _isLoading = false);
     }
   }
-  
+
   Future<void> _selectFiles() async {
     try {
       setState(() => _isLoading = true);
-      
+
       // Check storage permissions first
-      final hasStoragePermission = await _permissionService.requestStoragePermissions(
+      final hasStoragePermission =
+          await _permissionService.requestStoragePermissions(
         context: context,
         showRationale: true,
       );
-      
+
       if (!hasStoragePermission) {
         setState(() {
           _errorMessage = 'Storage permission is required to select files';
         });
         return;
       }
-      
+
       final selectedPaths = await _fileService.pickFiles();
       if (selectedPaths.isNotEmpty) {
         final fileItems = await _fileService.getFileItems(selectedPaths);
@@ -115,45 +117,45 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       setState(() => _isLoading = false);
     }
   }
-  
+
   Future<void> _startServer() async {
     if (_localIP == null) {
       setState(() => _errorMessage = 'No network connection found');
       return;
     }
-    
+
     if (_selectedFiles.isEmpty) {
       setState(() => _errorMessage = 'Please select files to share first');
       return;
     }
-    
+
     try {
       setState(() {
         _isLoading = true;
         _serverState = _serverState.copyWith(status: ServerStatus.starting);
       });
-      
+
       // Check network permissions for location-based WiFi info
       await _permissionService.requestNetworkPermissions(
         context: context,
         showRationale: false, // Don't show rationale for optional permission
       );
-      
+
       // Request notification permission for server status updates
       await _permissionService.requestNotificationPermission(
         context: context,
         showRationale: false, // Don't show rationale for optional permission
       );
-      
+
       final port = await _networkService.findAvailablePort();
       final sharedPaths = _selectedFiles.map((f) => f.path).toList();
-      
+
       final config = await _serverService.startServer(
         address: _localIP!,
         port: port,
         sharedPaths: sharedPaths,
       );
-      
+
       setState(() {
         _serverState = ServerState(
           status: ServerStatus.running,
@@ -162,9 +164,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
         _errorMessage = null;
       });
-      
+
       _pulseController.repeat(reverse: true);
-      
+
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -179,7 +181,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         );
       }
-      
     } catch (e) {
       setState(() {
         _serverState = ServerState(
@@ -192,24 +193,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       setState(() => _isLoading = false);
     }
   }
-  
+
   Future<void> _stopServer() async {
     try {
       setState(() {
         _isLoading = true;
         _serverState = _serverState.copyWith(status: ServerStatus.stopping);
       });
-      
+
       await _serverService.stopServer();
-      
+
       setState(() {
         _serverState = const ServerState(status: ServerStatus.stopped);
         _errorMessage = null;
       });
-      
+
       _pulseController.stop();
       _pulseController.reset();
-      
     } catch (e) {
       setState(() {
         _serverState = ServerState(
@@ -222,7 +222,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       setState(() => _isLoading = false);
     }
   }
-  
+
   void _shareUrl() {
     if (_serverState.config?.serverUrl != null) {
       Share.share(
@@ -231,7 +231,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     }
   }
-  
+
   void _copyUrl() {
     if (_serverState.config?.serverUrl != null) {
       Clipboard.setData(ClipboardData(text: _serverState.config!.serverUrl));
@@ -243,19 +243,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     }
   }
-  
+
   void _removeFile(int index) {
     setState(() {
       _selectedFiles.removeAt(index);
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.primaryGradient,
+        decoration: BoxDecoration(
+          gradient:
+              isDarkMode ? AppTheme.darkGradient : AppTheme.primaryGradient,
         ),
         child: SafeArea(
           child: Column(
@@ -264,7 +267,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               _buildPermissionStatus(),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color:
+                              isDarkMode ? AppColors.darkAccent : Colors.white,
+                        ),
+                      )
                     : _buildContent(),
               ),
             ],
@@ -273,7 +281,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -282,17 +290,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                '🌬️',
-                style: TextStyle(fontSize: 32),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'AirFiles',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              // Use the custom AirFiles logo widget
+              AirFilesLogo(
+                size: 48,
+                showText: true,
+                textColor: Colors.white,
               ),
             ],
           ),
@@ -300,7 +302,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Text(
             'Share files instantly on your local network',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withOpacity(0.95),
+              shadows: [
+                Shadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             textAlign: TextAlign.center,
           ),
@@ -309,16 +318,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: AppColors.spiralTealLight.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.wifi,
                     color: Colors.white,
                     size: 16,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 2,
+                      ),
+                    ],
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -337,16 +356,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildPermissionStatus() {
     return FutureBuilder<bool>(
       future: _permissionService.hasAllRequiredPermissions(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
-        
+
         final hasAllPermissions = snapshot.data ?? false;
         if (hasAllPermissions) return const SizedBox.shrink();
-        
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(12),
@@ -377,7 +396,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   _permissionService.showPermissionSettings(
                     context: context,
                     title: 'Missing Permissions',
-                    message: 'Please grant the required permissions in settings to use all features.',
+                    message:
+                        'Please grant the required permissions in settings to use all features.',
                   );
                 },
                 style: TextButton.styleFrom(
@@ -415,16 +435,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _buildServerStatus(),
           if (_errorMessage != null) _buildErrorMessage(),
           Expanded(
-            child: _selectedFiles.isEmpty
-                ? _buildEmptyState()
-                : _buildFileList(),
+            child:
+                _selectedFiles.isEmpty ? _buildEmptyState() : _buildFileList(),
           ),
           _buildBottomActions(),
         ],
       ),
     );
   }
-  
+
   Widget _buildServerStatus() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -465,26 +484,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Text(
             _getServerStatusText(),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppTheme.getServerStatusColor(
-                _serverState.status.name,
-              ),
-            ),
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.getServerStatusColor(
+                    _serverState.status.name,
+                  ),
+                ),
           ),
           if (_serverState.config != null) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
+                color: AppColors.darkSurfaceVariant,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(
                 _serverState.config!.serverUrl,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             ),
             const SizedBox(height: 12),
@@ -515,7 +534,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildActionButton({
     required VoidCallback onPressed,
     required IconData icon,
@@ -531,7 +550,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   IconData _getServerStatusIcon() {
     switch (_serverState.status) {
       case ServerStatus.running:
@@ -546,7 +565,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         return Icons.cloud_off;
     }
   }
-  
+
   String _getServerStatusText() {
     switch (_serverState.status) {
       case ServerStatus.running:
@@ -562,7 +581,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         return 'Server Stopped';
     }
   }
-  
+
   Widget _buildErrorMessage() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -599,36 +618,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.file_upload_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          AirFilesLogo(
+            size: 80,
+            showBackground: true,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             'No files selected',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Select files to start sharing',
+            'Select files to start sharing them\nover your local network',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+            textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
-  
+
   Widget _buildFileList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,8 +659,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Text(
             'Selected Files (${_selectedFiles.length})',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
         ),
         const SizedBox(height: 8),
@@ -656,7 +677,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ],
     );
   }
-  
+
   Widget _buildFileItem(FileItem file, int index) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -686,7 +707,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   String _getFileIcon(String extension) {
     switch (extension.toLowerCase()) {
       case 'jpg':
@@ -710,7 +731,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         return '📄';
     }
   }
-  
+
   Widget _buildBottomActions() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -734,7 +755,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: OutlinedButton.icon(
                 onPressed: _selectFiles,
                 icon: const Icon(Icons.add),
-                label: Text(_selectedFiles.isEmpty ? 'Select Files' : 'Add More Files'),
+                label: Text(
+                    _selectedFiles.isEmpty ? 'Select Files' : 'Add More Files'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -758,27 +780,66 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  
+
   void _showQRCode(BuildContext context) {
     if (_serverState.config?.serverUrl == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('QR Code'),
-        content: SizedBox(
-          width: 200,
-          height: 200,
-          child: QrImageView(
-            data: _serverState.config!.serverUrl,
-            version: QrVersions.auto,
-            size: 200.0,
-          ),
+        title: Row(
+          children: [
+            AirFilesLogo(
+              size: 24,
+              showBackground: false,
+            ),
+            const SizedBox(width: 8),
+            const Text('Share QR Code'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: QrImageView(
+                data: _serverState.config!.serverUrl,
+                version: QrVersions.auto,
+                size: 180.0,
+                backgroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Scan to access files',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _shareUrl();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Share'),
           ),
         ],
       ),
