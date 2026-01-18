@@ -4,6 +4,11 @@
   <img src="assets/logo3.png" alt="AirFiles Logo" width="120"/>
 </p>
 
+<p align="center">
+  <strong>Developed by Mohammed Asfar</strong><br/>
+  <a href="https://github.com/Mohammed-Asfar/airfiles_app">GitHub Repository</a>
+</p>
+
 A modern, cross-platform file sharing application built with Flutter. Share files seamlessly between devices on the same network via a beautiful web interface.
 
 ---

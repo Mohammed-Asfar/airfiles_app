@@ -405,6 +405,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Developed by Asfar',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 11,
+            ),
+          ),
           if (_wifiName != null) ...[
             const SizedBox(height: 8),
             Container(
