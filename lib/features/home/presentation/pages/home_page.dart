@@ -369,13 +369,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              const SizedBox(width: 40), // Balance the help button
               // Use the custom AirFiles logo widget
               AirFilesLogo(
                 size: 48,
                 showText: true,
                 textColor: Colors.white,
+              ),
+              // Help button
+              IconButton(
+                onPressed: _showHowToUseDialog,
+                icon: const Icon(
+                  Icons.help_outline_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                tooltip: 'How to Use',
               ),
             ],
           ),
@@ -952,6 +963,143 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  /// Show comprehensive How to Use dialog
+  void _showHowToUseDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.help_outline_rounded, color: AppColors.primaryColor),
+              SizedBox(width: 8),
+              Expanded(child: Text('How to Use AirFiles')),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHelpStepSection(
+                  1,
+                  'Select Files',
+                  'Tap "Select Files" to choose files or folders you want to share.',
+                  Icons.folder_open_rounded,
+                  AppColors.primaryColor,
+                ),
+                const SizedBox(height: 16),
+                _buildHelpStepSection(
+                  2,
+                  'Start Sharing',
+                  'Tap "Start Sharing" to start the local server.',
+                  Icons.play_arrow_rounded,
+                  AppColors.success,
+                ),
+                const SizedBox(height: 16),
+                _buildHelpStepSection(
+                  3,
+                  'Share the Link',
+                  'Share the QR code or IP address with others on the same Wi-Fi network.',
+                  Icons.qr_code_rounded,
+                  AppColors.info,
+                ),
+                const SizedBox(height: 16),
+                _buildHelpStepSection(
+                  4,
+                  'Access Files',
+                  'Recipients open the link in any web browser to download files. No app installation needed!',
+                  Icons.language_rounded,
+                  AppColors.secondary,
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.lightbulb_outline, color: AppColors.warning, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tip: Both devices must be connected to the same Wi-Fi network.',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Got it'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHelpStepSection(int step, String title, String description, IconData icon, Color color) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              '$step',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 14, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBottomActions({bool isDesktop = false}) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -990,17 +1138,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: _showScopedStorageHelpDialog,
-                  style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 16),
-                      foregroundColor: isDesktop ? Colors.white : null,
-                      side: isDesktop
-                          ? const BorderSide(color: Colors.white)
-                          : null),
-                  child: const Icon(Icons.help_outline, size: 20),
-                ),
+                
               ],
             ),
           ] else ...[

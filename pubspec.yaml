@@ -65,6 +65,9 @@ dependencies:
   
   # Device info for Android version detection
   device_info_plus: ^10.1.0
+  
+  # Local storage for preferences
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
