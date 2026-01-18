@@ -475,34 +475,6 @@ class PermissionService {
     return permissions;
   }
 
-  /// Get storage permissions status
-  Future<Map<Permission, PermissionStatus>> _getStoragePermissionsStatus() async {
-    final permissions = <Permission>[];
-
-    if (Platform.isAndroid) {
-      final isAndroid13Plus = await _isAndroid13OrHigher();
-      if (isAndroid13Plus) {
-        permissions.addAll([
-          Permission.photos,
-          Permission.videos,
-          Permission.audio,
-        ]);
-      } else {
-        permissions.add(Permission.storage);
-      }
-    } else if (Platform.isIOS) {
-      permissions.addAll([
-        Permission.photos,
-      ]);
-    }
-
-    final statuses = <Permission, PermissionStatus>{};
-    for (final permission in permissions) {
-      statuses[permission] = await permission.status;
-    }
-
-    return statuses;
-  }
   
   /// Check if storage permissions are available (granted or limited) - Android only
   Future<bool> hasStorageAccess() async {

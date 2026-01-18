@@ -123,9 +123,12 @@ flutter:
 
 flutter_launcher_icons:
   android: "launcher_icon"
+  adaptive_icon_background: "#279A97"
+  adaptive_icon_foreground: "assets/logo2.png"
   ios: true
-  image_path: "assets/logo3.png"
+  image_path: "assets/logo2.png"
   min_sdk_android: 21
   windows:
     generate: true
+    image_path: "assets/logo3.png"
     icon_size: 48

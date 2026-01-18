@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:path/path.dart' as path_helper;
 import 'package:mime/mime.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -489,7 +487,7 @@ class FileService {
   /// Check if we can access a directory
   Future<bool> _canAccessDirectory(Directory directory) async {
     try {
-      final entities = await directory.list().take(1).toList();
+      await directory.list().take(1).toList();
       return true; // If we can list contents, we have access
     } catch (e) {
       return false;
