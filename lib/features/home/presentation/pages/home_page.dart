@@ -716,13 +716,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.getFileTypeColor(file.extension),
-          child: Text(
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.getFileTypeColor(file.extension).withOpacity(0.15),
+                AppTheme.getFileTypeColor(file.extension).withOpacity(0.25),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.getFileTypeColor(file.extension).withOpacity(0.3),
+              width: 1.5,
+            ),
+          ),
+          child: Icon(
             file.type == FileItemType.directory
-                ? '📁'
+                ? Icons.folder_rounded
                 : _getFileIcon(file.extension),
-            style: const TextStyle(fontSize: 16),
+            color: AppTheme.getFileTypeColor(file.extension),
+            size: 22,
           ),
         ),
         title: Text(
@@ -742,27 +759,84 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  String _getFileIcon(String extension) {
+  IconData _getFileIcon(String extension) {
     switch (extension.toLowerCase()) {
+      // Images
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
-        return '🖼️';
+      case 'webp':
+      case 'bmp':
+      case 'svg':
+        return Icons.image_rounded;
+      // Videos
       case 'mp4':
       case 'avi':
       case 'mov':
-        return '🎬';
+      case 'mkv':
+      case 'webm':
+      case 'flv':
+        return Icons.movie_rounded;
+      // Audio
       case 'mp3':
       case 'wav':
-        return '🎵';
+      case 'flac':
+      case 'aac':
+      case 'ogg':
+      case 'm4a':
+        return Icons.music_note_rounded;
+      // Documents
       case 'pdf':
-        return '📄';
+        return Icons.picture_as_pdf_rounded;
       case 'doc':
       case 'docx':
-        return '📝';
+        return Icons.description_rounded;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart_rounded;
+      case 'ppt':
+      case 'pptx':
+        return Icons.slideshow_rounded;
+      case 'txt':
+      case 'rtf':
+        return Icons.article_rounded;
+      // Archives
+      case 'zip':
+      case 'rar':
+      case '7z':
+      case 'tar':
+      case 'gz':
+        return Icons.folder_zip_rounded;
+      // Apps
+      case 'apk':
+        return Icons.android_rounded;
+      case 'exe':
+      case 'msi':
+        return Icons.desktop_windows_rounded;
+      // Web
+      case 'html':
+      case 'css':
+      case 'js':
+        return Icons.code_rounded;
+      // Data
+      case 'json':
+      case 'xml':
+      case 'yaml':
+      case 'csv':
+        return Icons.data_object_rounded;
+      // Code
+      case 'dart':
+      case 'py':
+      case 'java':
+      case 'kt':
+      case 'swift':
+      case 'c':
+      case 'cpp':
+      case 'h':
+        return Icons.terminal_rounded;
       default:
-        return '📄';
+        return Icons.insert_drive_file_rounded;
     }
   }
 
