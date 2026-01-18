@@ -295,24 +295,71 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               isDarkMode ? AppTheme.darkGradient : AppTheme.primaryGradient,
         ),
         child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 800) {
+                return _buildDesktopLayout();
+              }
+              return _buildMobileLayout();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        _buildHeader(),
+        _buildPermissionStatus(),
+        Expanded(
+          child: _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkAccent
+                        : Colors.white,
+                  ),
+                )
+              : _buildContent(isDesktop: false),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        // Left Control Panel
+        SizedBox(
+          width: 350,
           child: Column(
             children: [
               _buildHeader(),
               _buildPermissionStatus(),
               Expanded(
-                child: _isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                          color:
-                              isDarkMode ? AppColors.darkAccent : Colors.white,
-                        ),
-                      )
-                    : _buildContent(),
+                child: Center(
+                  child: _buildServerStatus(),
+                ),
               ),
+              _buildBottomActions(isDesktop: true),
             ],
           ),
         ),
-      ),
+        // Right File List Panel
+        Expanded(
+          child: _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkAccent
+                        : Colors.white,
+                  ),
+                )
+              : _buildContent(isDesktop: true),
+        ),
+      ],
     );
   }
 
@@ -450,7 +497,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent({required bool isDesktop}) {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -466,13 +513,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
       child: Column(
         children: [
-          _buildServerStatus(),
+          if (!isDesktop) _buildServerStatus(),
           if (_errorMessage != null) _buildErrorMessage(),
           Expanded(
             child:
                 _selectedFiles.isEmpty ? _buildEmptyState() : _buildFileList(),
           ),
-          _buildBottomActions(),
+          if (!isDesktop) _buildBottomActions(),
         ],
       ),
     );
@@ -905,7 +952,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBottomActions() {
+  Widget _buildBottomActions({bool isDesktop = false}) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -919,6 +966,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 label: const Text('Start Sharing'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: isDesktop ? Colors.white : null,
+                  foregroundColor: isDesktop ? AppColors.primaryColor : null,
                 ),
               ),
             ),
@@ -933,6 +982,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         _selectedFiles.isEmpty ? 'Select Files' : 'Add More Files'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      foregroundColor: isDesktop ? Colors.white : null,
+                      side: isDesktop
+                          ? const BorderSide(color: Colors.white)
+                          : null,
                     ),
                   ),
                 ),
@@ -940,8 +993,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 OutlinedButton(
                   onPressed: _showScopedStorageHelpDialog,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  ),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 16),
+                      foregroundColor: isDesktop ? Colors.white : null,
+                      side: isDesktop
+                          ? const BorderSide(color: Colors.white)
+                          : null),
                   child: const Icon(Icons.help_outline, size: 20),
                 ),
               ],
@@ -955,6 +1012,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 label: const Text('Stop Sharing'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.error,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),

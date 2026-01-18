@@ -4,6 +4,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as path_helper;
+import 'package:flutter/services.dart' show rootBundle;
 import '../models/server_config.dart';
 
 class FileServerService {
@@ -78,6 +79,19 @@ class FileServerService {
 
       if (path.isEmpty || path == '/') {
         return _generateDirectoryListing('/', _sharedPaths);
+      }
+
+      if (path == '/logo.png') {
+        try {
+          final data = await rootBundle.load('assets/logo3.png');
+          return Response.ok(
+            data.buffer.asUint8List(),
+            headers: {'Content-Type': 'image/png'},
+          );
+        } catch (e) {
+          print('Error loading logo: $e');
+          return Response.notFound('Logo not found');
+        }
       }
 
       // Handle file/directory requests
@@ -222,7 +236,7 @@ class FileServerService {
     html.writeln('<head>');
     html.writeln('<meta charset="UTF-8">');
     html.writeln('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    html.writeln('<title>$displayPath - AirFiles</title>');
+    html.writeln('<title>AirFiles</title>');
     html.writeln('<link rel="preconnect" href="https://fonts.googleapis.com">');
     html.writeln('<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap" rel="stylesheet">');
     html.writeln('<style>');
@@ -237,9 +251,6 @@ class FileServerService {
     // Title Bar
     html.writeln('<div class="title-bar">');
     html.writeln('<div class="title-center">');
-    html.writeln('<div class="title-logo">');
-    html.writeln('<img src="https://airfiles.app/logo.png" alt="AirFiles">');
-    html.writeln('</div>');
     html.writeln('<span class="title-brand">AirFiles</span>');
     html.writeln('<span class="title-sep">—</span>');
     html.writeln('<span class="title-path">$displayPath</span>');

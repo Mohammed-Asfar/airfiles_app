@@ -38,7 +38,7 @@ class AirFilesLogo extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(size * 0.25),
             child: Image.asset(
-              'assets/logo2.png',
+              'assets/logo3.png',
               width: size,
               height: size,
               fit: BoxFit.cover,
