@@ -40,7 +40,20 @@ Recipients simply open a web browser and access your shared files instantly. Any
 
 ## Screenshots
 
-*(Add screenshots here)*
+### Windows
+| Home Page | Files Added | Sharing |
+|:---------:|:-----------:|:-------:|
+| ![Home](screenshots/homepage.png) | ![Files Added](screenshots/fileadded.png) | ![Sharing](screenshots/sharingfile.png) |
+
+### Mobile (Android)
+| Home Page | Files Added | Sharing |
+|:---------:|:-----------:|:-------:|
+| ![Home](screenshots/homemobile.jpg) | ![Files Added](screenshots/fileaddedmobile.jpg) | ![Sharing](screenshots/sharingfilemobile.jpg) |
+
+### Web Interface (Browser)
+| Desktop | Mobile |
+|:-------:|:------:|
+| ![Web Desktop](screenshots/sharedfileinweb.png) | ![Web Mobile](screenshots/sharedfileinwebmobile.jpg) |
 
 ## Getting Started
 
