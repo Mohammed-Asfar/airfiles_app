@@ -124,29 +124,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       print('File selection error: $errorMessage');
       
       setState(() {
-        // Provide more helpful error messages for common Android issues
-        if (errorMessage.contains('scoped storage') || 
-            errorMessage.contains('unknown_path') ||
-            errorMessage.contains('failed to retrieve path')) {
-          _errorMessage = 'Android Storage Restriction: $errorMessage\n\n'
-              'Try these solutions:\n'
-              '• Select files from Downloads folder\n'
-              '• Use Documents or Pictures folders\n'
-              '• Avoid "Recent files" or cloud storage\n'
-              '• Copy files to Downloads first if needed';
-        } else if (errorMessage.contains('permission')) {
+        if (errorMessage.contains('permission')) {
           _errorMessage = 'Permission Error: Please grant storage access in Settings > Apps > AirFiles > Permissions';
         } else {
-          _errorMessage = 'File Selection Error: $errorMessage';
+          _errorMessage = 'Failed to select files. Please try again.';
         }
       });
-      
-      // Show detailed error dialog for scoped storage issues
-      if (mounted && (errorMessage.contains('scoped storage') || 
-          errorMessage.contains('unknown_path') ||
-          errorMessage.contains('failed to retrieve path'))) {
-        _showScopedStorageHelpDialog();
-      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -904,71 +887,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       default:
         return Icons.insert_drive_file_rounded;
     }
-  }
-
-  /// Show help dialog for Android scoped storage issues
-  void _showScopedStorageHelpDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.info_outline, color: AppColors.primaryColor),
-              SizedBox(width: 8),
-              Text('Android File Access Help'),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Android 10+ restricts file access for security. Here\'s how to select files successfully:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                const Text('✅ RECOMMENDED LOCATIONS:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
-                const SizedBox(height: 8),
-                const Text('• Downloads folder - Best compatibility'),
-                const Text('• Documents folder - Good for documents'),
-                const Text('• Pictures/DCIM - Good for photos'),
-                const Text('• Movies - Good for videos'),
-                const Text('• Music - Good for audio files'),
-                const SizedBox(height: 16),
-                const Text('❌ AVOID THESE:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error)),
-                const SizedBox(height: 8),
-                const Text('• "Recent files" section'),
-                const Text('• Google Drive or cloud storage'),
-                const Text('• Third-party app folders'),
-                const Text('• System directories'),
-                const SizedBox(height: 16),
-                const Text('💡 QUICK SOLUTION:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryColor)),
-                const SizedBox(height: 8),
-                const Text('1. Open your file manager'),
-                const Text('2. Navigate to Downloads folder'),
-                const Text('3. Copy your files there if needed'),
-                const Text('4. Select files directly from Downloads'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Got it'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _selectFiles(); // Try again
-              },
-              child: const Text('Try Again'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   /// Show comprehensive How to Use dialog
